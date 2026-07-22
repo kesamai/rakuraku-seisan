@@ -36,11 +36,18 @@
     width: 100%;
   }
 }
+/* スマホではカレンダーを画面幅にフィットさせる */
 @media (max-width: 600px) {
   .calendar-box {
     width: 100%;
+    overflow-x: hidden;
+  }
+
+  .calendar {
+    width: 100%;
   }
 }
+
 @media (max-width: 600px) {
   main {
     padding: 12px;
@@ -277,6 +284,14 @@
 
     document.getElementById("status").textContent = "CSVを出力しました。";
   };
+  document.addEventListener("DOMContentLoaded", () => {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1;
+
+  document.getElementById("current-month").textContent = `${y}年${m}月`;
+});
+
 </script>
 
 </body>
