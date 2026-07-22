@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>楽々精算アプリ（通勤・在宅チャージ）</title>
 <style>
   body { font-family: system-ui, sans-serif; margin: 0; background: #f5f5f7; }
@@ -17,6 +19,34 @@
     padding: 6px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px;
     width: 160px;
   }
+  /* PC・タブレットでは横並びで160px */
+.route-box input,
+.route-box select {
+  width: 160px;
+}
+
+/* スマホでは縦並び＆幅100% */
+@media (max-width: 600px) {
+  .route-box {
+    flex-direction: column;
+  }
+
+  .route-box input,
+  .route-box select {
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  .calendar-box {
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  main {
+    padding: 12px;
+  }
+}
+
 
   .calendar-box {
     background: #fff; padding: 16px; border-radius: 8px;
