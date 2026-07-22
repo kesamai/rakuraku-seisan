@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>楽々精算アプリ（通勤・在宅チャージ）</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #f5f5f7; }
+  header { background: #222; color: #fff; padding: 12px 20px; font-size: 18px; }
+  main { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+  .route-box {
+    background: #fff; padding: 16px; border-radius: 8px;
+    border: 1px solid #ddd; display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .route-box label { font-size: 13px; display: block; }
+  .route-box input, .route-box select {
+    padding: 6px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px;
+    width: 160px;
+  }
+
+  .calendar-box {
+    background: #fff; padding: 16px; border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+
+  .calendar-header {
+    display: flex; justify-content: flex-end; margin-bottom: 10px;
+  }
+
+  .calendar {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+  }
+
+  .weekday {
+    text-align: center; font-weight: bold; padding: 6px;
+  }
+
+  .day {
+    padding: 10px; background: #fff; border-radius: 6px;
+    border: 1px solid #ccc; text-align: center; cursor: pointer;
+  }
+  .weekend { background: #eee; }
+  .work { background: #ffeb3b !important; }
+  .home { background: #b3e5fc !important; }
+
+  button {
+    padding: 10px 16px; border-radius: 6px; border: none;
+    cursor: pointer; font-size: 14px;
+  }
+  .primary { background: #0070f3; color: #fff; }
+  .status { color: #0a7c2f; min-height: 20px; }
+</style>
+</head>
+<body>
+
+<header>楽々精算アプリ（通勤・在宅チャージ）</header>
+
+<main>
+
+  <!-- マイルート設定（横並び） -->
+  <div class="route-box">
+    <div>
+      <label>出発地</label>
+      <input id="from" placeholder="例：自宅">
+    </div>
+
+    <div>
+      <label>到着地</label>
+      <input id="to" placeholder="例：会社">
+    </div>
+
+    <div>
+      <label>交通機関</label>
+      <select id="transport">
+        <option value="--">--</option>
+        <option value="電車（国内）">電車（国内）</option>
+        <option value="バス（国内）">バス（国内）</option>
+        <option value="その他※原則使用不可">その他※原則使用不可</option>
+      </select>
+    </div>
+
+    <div>
+      <label>通勤料金</label>
+      <input id="fare" type="number" placeholder="例：500">
+    </div>
+
+    <div>
+      <label>往復/片道</label>
+      <select id="roundTrip">
+        <option value="往復">往復</option>
+        <option value="片道">片道</option>
+      </select>
+    </div>
+
+    <div>
+      <label>客先請求</label>
+      <select id="billing">
+        <option value="なし">なし</option>
+        <option value="あり">あり</option>
+      </select>
+    </div>
+
+    <div>
+      <label>申請理由（出勤時）</label>
+      <select id="reasonWork">
+        <option value="通勤費(通常勤務地)">通勤費(通常勤務地)</option>
+        <option value="営業関連(業務説明等)">営業関連(業務説明等)</option>
+        <option value="社内業務(面談・会議等)">社内業務(面談・会議等)</option>
+        <option value="健康診断">健康診断</option>
+        <option value="内勤業務／採用関係">内勤業務／採用関係</option>
+        <option value="内勤業務／その他※要備考入力">内勤業務／その他※要備考入力</option>
+        <option value="その他※要備考入力">その他※要備考入力</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- カレンダー -->
+  <div class="calendar-box">
+    <div class="calendar-header">
+      <input id="yearMonth" type="month">
+    </div>
+
+    <div id="calendar" class="calendar"></div>
+  </div>
+
+  <!-- CSV出力 -->
+  <button class="primary" id="csvBtn">CSV出力</button>
+  <div class="status" id="status"></div>
+
+</main>
+
+<script>
+  const HOME_FARE = 250; // 在宅チャージ固定
+
+  function drawCalendar() {
+    const ym = document.getElementById("yearMonth").value;
+    if (!ym) return;
+
+    const [year, month] = ym.split("-");
+    const calendar = document.getElementById("calendar");
+    calendar.innerHTML = "";
+
+    // 曜日行
+    const weekdays = ["日","月","火","水","木","金","土"];
+    weekdays.forEach(w => {
+      const wd = document.createElement("div");
+      wd.className = "weekday";
+      wd.textContent = w;
+      calendar.appendChild(wd);
+    });
+
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    const startWeekday = firstDay.getDay();
+
+    // 空白セル
+    for (let i = 0; i < startWeekday; i++) {
+      const blank = document.createElement("div");
+      calendar.appendChild(blank);
+    }
+
+    // 日付セル
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const date = new Date(year, month - 1, d);
+      const cell = document.createElement("div");
+      cell.className = "day";
+      cell.textContent = d;
+
+      if (date.getDay() === 0 || date.getDay() === 6) {
+        cell.classList.add("weekend");
+      }
+
+      cell.dataset.state = "default";
+
+      cell.onclick = () => {
+        if (cell.dataset.state === "default") {
+          cell.dataset.state = "work";
+          cell.classList.add("work");
+          cell.classList.remove("home");
+        } else if (cell.dataset.state === "work") {
+          cell.dataset.state = "home";
+          cell.classList.add("home");
+          cell.classList.remove("work");
+        } else {
+          cell.dataset.state = "default";
+          cell.classList.remove("work", "home");
+        }
+      };
+
+      calendar.appendChild(cell);
+    }
+  }
+
+  document.getElementById("yearMonth").onchange = drawCalendar;
+
+  document.getElementById("csvBtn").onclick = () => {
+    const ym = document.getElementById("yearMonth").value;
+    if (!ym) return alert("年月を選択してください");
+
+    const [year, month] = ym.split("-");
+    const from = document.getElementById("from").value;
+    const to = document.getElementById("to").value;
+    const transport = document.getElementById("transport").value;
+    const fare = Number(document.getElementById("fare").value);
+    const roundTrip = document.getElementById("roundTrip").value;
+    const billing = document.getElementById("billing").value;
+    const reasonWork = document.getElementById("reasonWork").value;
+
+    const calendar = document.querySelectorAll(".day");
+
+    let csv = "日付,出発,到着,往復,金額/Km,客先請求,申請理由,交通機関,備考\n";
+
+    calendar.forEach(cell => {
+      const state = cell.dataset.state;
+      if (state === "default") return;
+
+      const day = cell.textContent.padStart(2, "0");
+      const date = `${year}/${month}/${day}`;
+
+      let reason = "";
+      let price = 0;
+      let billingOut = billing;
+      let transportOut = transport;
+      let roundOut = roundTrip;
+
+      if (state === "work") {
+        reason = reasonWork;
+        price = roundTrip === "往復" ? fare : fare / 2;
+      } else {
+        reason = "在宅チャージ";
+        price = HOME_FARE;
+        billingOut = "なし";
+        transportOut = "--";
+        roundOut = "片道";
+      }
+
+      csv += `${date},${from},${to},${roundOut},${price},${billingOut},${reason},${transportOut},\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `交通費_${year}${month}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    document.getElementById("status").textContent = "CSVを出力しました。";
+  };
+</script>
+
+</body>
+</html>
