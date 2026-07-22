@@ -19,13 +19,13 @@
     padding: 6px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px;
     width: 160px;
   }
-  /* PC・タブレットでは横並びで160px */
+/* PCでは160pxのまま */
 .route-box input,
 .route-box select {
   width: 160px;
 }
 
-/* スマホでは縦並び＆幅100% */
+/* スマホ最適化 */
 @media (max-width: 600px) {
   .route-box {
     flex-direction: column;
@@ -35,9 +35,7 @@
   .route-box select {
     width: 100%;
   }
-}
-/* スマホではカレンダーを画面幅にフィットさせる */
-@media (max-width: 600px) {
+
   .calendar-box {
     width: 100%;
     overflow-x: hidden;
@@ -46,13 +44,42 @@
   .calendar {
     width: 100%;
   }
-}
 
-@media (max-width: 600px) {
   main {
     padding: 12px;
   }
 }
+  /* スマホでカレンダーが見切れないようにする */
+@media (max-width: 600px) {
+
+  /* カレンダー全体を画面幅にフィット */
+  .calendar-box {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .calendar {
+    width: 100%;
+    table-layout: fixed; /* セル幅を自動調整 */
+  }
+
+  /* 日付セルを小さくする */
+  .calendar td, 
+  .calendar th {
+    padding: 4px;       /* 余白を減らす */
+    font-size: 12px;    /* 文字を少し小さく */
+  }
+
+  /* 日付の丸ボタンが大きい場合は縮小 */
+  .calendar .day {
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    font-size: 12px;
+  }
+}
+
+
 
 
   .calendar-box {
