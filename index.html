@@ -15,15 +15,16 @@
     border: 1px solid #ddd; display: flex; gap: 12px; flex-wrap: wrap;
   }
   .route-box label { font-size: 13px; display: block; }
-  .route-box input, .route-box select {
-    padding: 6px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px;
-    width: 160px;
-  }
-/* PCでは160pxのまま */
+/* PCでは160pxのまま（1回だけ定義） */
 .route-box input,
 .route-box select {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 13px;
   width: 160px;
 }
+
 
 /* スマホ最適化 */
 @media (max-width: 600px) {
