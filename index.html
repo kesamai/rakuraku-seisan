@@ -24,9 +24,18 @@
   font-size: 13px;
   width: 160px;
 }
+.route-box > div {
+  width: 160px;
+}
 
 
 /* スマホ最適化 */
+  @media (max-width: 600px) {
+  .route-box > div {
+    width: 100%;
+  }
+}
+
 @media (max-width: 600px) {
   .route-box {
     flex-direction: column;
